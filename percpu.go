@@ -1,3 +1,4 @@
+// Package percpu provides best-effort CPU-local sharded values.
 package percpu
 
 import (

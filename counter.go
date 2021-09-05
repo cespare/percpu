@@ -7,7 +7,7 @@ import (
 // A Counter is an int64 counter which may be efficiently incremented
 // by many goroutines concurrently.
 type Counter struct {
-	vs *Values
+	vs *Values // of *cval
 }
 
 type cval struct {

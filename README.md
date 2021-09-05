@@ -2,7 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/cespare/percpu.svg)](https://pkg.go.dev/github.com/cespare/percpu)
 
-Percpu is a Go package to support best-effort per-CPU sharded values.
+Percpu is a Go package to support best-effort CPU-local sharded values.
 
 See https://github.com/golang/go/issues/18802 for background information.
 
