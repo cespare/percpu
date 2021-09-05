@@ -1,4 +1,18 @@
-// Package clrand provides CPU-local random number generators.
+// Package clrand implements CPU-local random number generators. These may be
+// used simultaneously by many goroutines without significant cache contention.
+//
+// This package is based on golang.org/x/exp/rand and uses the PCG generator
+// from that package. This package also provides a rand.Source to be used with
+// that package.
+//
+// An important difference between the random number generators in this package
+// and the ones provided by golang.org/x/exp/rand (and math/rand) is that they
+// are deterministic whereas the generators in this package are not: even when
+// starting from the same initial seed, Sources from this package return
+// sequences of values that vary from run to run. For this reason, there is no
+// top-level Seed function, and all Sources (including the global Source used by
+// the package functions Int, Intn, and so on) are randomly seeded when they are
+// created.
 package clrand
 
 import (
@@ -14,6 +28,10 @@ import (
 
 // A Source is a source of uniformly-distributed pseudo-random uint64 values
 // in the range [0, 1<<64). It implements golang.org/x/exp/rand.Source.
+//
+// By design, Source is not deterministic: even starting with the same initial
+// state, it does not generate the same values from run to run. Therefore, a
+// Source is always created with a randomized seed and Source.Seed is a no-op.
 type Source struct {
 	vs *percpu.Values // of *sval
 }
@@ -28,7 +46,13 @@ type sval struct {
 	pad [128 - unsafe.Sizeof(lockedPCGSource{})%128]byte
 }
 
-func NewSource(seed uint64) *Source {
+// NewSource creates a Source with a randomized seed.
+func NewSource() *Source {
+	var b [8]byte
+	if _, err := cryptorand.Read(b[:]); err != nil {
+		panic(err)
+	}
+	seed := binary.BigEndian.Uint64(b[:])
 	vs := percpu.NewValues(func() interface{} {
 		var sv sval
 		sv.pcg.Seed(atomic.AddUint64(&seed, 1) - 1)
@@ -37,15 +61,11 @@ func NewSource(seed uint64) *Source {
 	return &Source{vs: vs}
 }
 
-func (s *Source) Seed(seed uint64) {
-	s.vs.Do(func(v interface{}) {
-		sv := v.(*sval)
-		sv.mu.Lock()
-		defer sv.mu.Unlock()
-		sv.pcg.Seed(atomic.AddUint64(&seed, 1) - 1)
-	})
-}
+// Seed is a no-op. It is only defined for compatibility with the rand.Source
+// interface.
+func (s *Source) Seed(uint64) {}
 
+// Uint64 returns a pseudo-random 64-bit integer as a uint64.
 func (s *Source) Uint64() uint64 {
 	sv := s.vs.Get().(*sval)
 	sv.mu.Lock()
@@ -53,16 +73,7 @@ func (s *Source) Uint64() uint64 {
 	return sv.pcg.Uint64()
 }
 
-var globalRand *rand.Rand
-
-func init() {
-	var b [8]byte
-	if _, err := cryptorand.Read(b[:]); err != nil {
-		panic(err)
-	}
-	seed := binary.BigEndian.Uint64(b[:])
-	globalRand = rand.New(NewSource(seed))
-}
+var globalRand = rand.New(NewSource())
 
 // ExpFloat64 returns an exponentially distributed float64 in the range
 // (0, +math.MaxFloat64] with an exponential distribution whose rate parameter

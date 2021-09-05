@@ -32,7 +32,7 @@ attemptLoop:
 				defer wg.Done()
 				seen := make(map[*int]int)
 				<-start
-				for i := 0; i < 1e6; i++ {
+				for i := 0; i < 1e6*(attempt+1); i++ {
 					p := vs.Get().(*int)
 					seen[p]++
 				}

@@ -26,7 +26,7 @@ func (c *Counter) Add(n int64) {
 	atomic.AddInt64(&c.vs.Get().(*cval).n, n)
 }
 
-// Load returns the current total counter value.
+// Load computes the total counter value.
 func (c *Counter) Load() int64 {
 	var sum int64
 	c.vs.Do(func(v interface{}) {

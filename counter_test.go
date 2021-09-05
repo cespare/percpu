@@ -86,7 +86,6 @@ func BenchmarkCounterParallel(b *testing.B) {
 					c.Add(1)
 				}
 			})
-			// _ = c.Load()
 		})
 	}
 }

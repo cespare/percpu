@@ -7,8 +7,8 @@ import (
 )
 
 // Values is a sharded set of values which have an affinity for a particular
-// processor. This can be used to update a collection from many goroutines at
-// once with low contention.
+// processor. This can be used to avoid cache contention when updating a shared
+// value simultaneously from many goroutines.
 type Values struct {
 	shards []interface{}
 }
@@ -31,8 +31,8 @@ func NewValues(newVal func() interface{}) *Values {
 // All access of the returned value must use further synchronization
 // mechanisms.
 //
-// BUG: If GOMAXPROCS has changed since vs was created with NewValues,
-// Get may panic.
+// BUG(cespare): If GOMAXPROCS has changed since a Values was created with
+// NewValues, Get may panic.
 func (vs *Values) Get() interface{} {
 	return vs.shards[getProcID()]
 }
