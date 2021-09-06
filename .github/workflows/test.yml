@@ -24,3 +24,6 @@ jobs:
 
       - name: Test
         run: go test -count 1 -bench . -benchtime 1x ./...
+
+      - name: Race tests
+        run: go test -race -count 1 -bench . -benchtime 1x ./...
