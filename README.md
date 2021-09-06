@@ -5,7 +5,8 @@
 Percpu is a Go package to support best-effort CPU-local sharded values.
 
 This package is something of an experiment. See [Go issue #18802] for discussion
-about adding this functionality into the Go standard library.
+about adding this functionality into the Go standard library. I used an [API
+suggested by Bryan Mills (@bcmills)][API] on that issue.
 
 ## IMPORTANT CAVEATS
 
@@ -46,3 +47,4 @@ counters:
 | percpu |           7.1B |                 13.5 ns |                               |
 
 [Go issue #18802]: https://github.com/golang/go/issues/18802
+[API]: https://github.com/golang/go/issues/18802#issuecomment-275494801
