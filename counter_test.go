@@ -28,6 +28,33 @@ func TestCounter(t *testing.T) {
 	}
 }
 
+func TestCounterReset(t *testing.T) {
+	c := NewCounter()
+	var wg sync.WaitGroup
+	const n = 100
+	var resetSum int64
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < n; i++ {
+				c.Add(1)
+				if i%20 == 0 {
+					atomic.AddInt64(&resetSum, c.Reset())
+				}
+			}
+		}()
+	}
+	wg.Wait()
+	resetSum += c.Reset()
+	if n := c.Load(); n != 0 {
+		t.Fatalf("after Reset, Load was %d", n)
+	}
+	if want := int64(n * n); resetSum != want {
+		t.Fatalf("got total Resets=%d; want %d", resetSum, want)
+	}
+}
+
 // Measure overhead without contention.
 func BenchmarkCounterNonParallel(b *testing.B) {
 	c := NewCounter()
